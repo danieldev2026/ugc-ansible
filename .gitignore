@@ -1,1 +1,5 @@
 roles/app/files/env/*
+
+# SSL certificates (sensitive)
+roles/app/files/nginx/ssl/*.pem
+roles/app/files/nginx/ssl/*.key
