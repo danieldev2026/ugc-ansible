@@ -1,0 +1,12 @@
+- hosts: app
+  become: true
+  vars:
+    registry: "docker.io"
+    registry_user: "ugc"
+    tag: "latest"
+  roles:
+    - common
+    - docker
+  tasks:
+    - name: Include registry deployment tasks
+      include_tasks: ../roles/app/tasks/deploy-registry.yml

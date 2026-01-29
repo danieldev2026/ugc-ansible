@@ -35,9 +35,9 @@
     group: ducle
     mode: '0644'
 
-- name: Copy docker-compose.yml
+- name: Copy docker-compose.yml (registry version)
   copy:
-    src: docker-compose.yml
+    src: docker-compose.registry.yml
     dest: /opt/ugc/docker-compose.yml
     owner: ducle
     group: ducle
@@ -56,20 +56,12 @@
     - admin.env
     - ui.env
 
-- name: Clone ugc-ui
-  become: false
-  git:
-    repo: git@github.com:danieldev2026/ugc-ui.git
-    dest: /opt/ugc/ugc-ui
-    version: develop
-    force: yes
-
 - name: Clone ugc-api
   become: false
   git:
     repo: git@github.com:danieldev2026/ugc-api.git
     dest: /opt/ugc/ugc-api
-    version: develop
+    version: "{{ branch | default('develop') }}"
     force: yes
 
 - name: Clone ugc-admin-api
@@ -77,15 +69,7 @@
   git:
     repo: git@github.com:danieldev2026/ugc-admin-api.git
     dest: /opt/ugc/ugc-admin-api
-    version: develop
-    force: yes
-
-- name: Clone ugc-admin
-  become: false
-  git:
-    repo: git@github.com:danieldev2026/ugc-admin.git
-    dest: /opt/ugc/ugc-admin
-    version: develop
+    version: "{{ branch | default('develop') }}"
     force: yes
 
 - name: Copy api env to ugc-api
@@ -104,25 +88,33 @@
     group: ducle
     mode: '0644'
 
-- name: Copy admin env to ugc-admin
+- name: Create .env file for docker-compose
   copy:
-    src: env/admin.env
-    dest: /opt/ugc/ugc-admin/.env
+    content: |
+      REGISTRY={{ registry | default('docker.io') }}
+      REGISTRY_USER={{ registry_user | default('ugc') }}
+      TAG={{ tag | default('latest') }}
+      MYSQL_ROOT_PASSWORD={{ mysql_root_password | default('ugcDEV@2026') }}
+    dest: /opt/ugc/.env
     owner: ducle
     group: ducle
     mode: '0644'
 
-- name: Copy web env to ugc-ui
-  copy:
-    src: env/ui.env
-    dest: /opt/ugc/ugc-ui/.env
-    owner: ducle
-    group: ducle
-    mode: '0644'
-
-- name: Docker compose build and up
+- name: Docker login to registry
   become: true
-  command: docker compose up -d --build
+  command: docker login {{ registry | default('docker.io') }} -u {{ registry_user }} -p {{ registry_password }}
+  when: registry_password is defined
+  no_log: true
+
+- name: Pull latest images
+  become: true
+  command: docker compose pull
+  args:
+    chdir: /opt/ugc
+
+- name: Docker compose up
+  become: true
+  command: docker compose up -d
   args:
     chdir: /opt/ugc
 
@@ -142,27 +134,11 @@
   args:
     chdir: /opt/ugc
 
-- name: Install composer dependencies for ugc-api
-  become: true
-  command: >
-    docker compose exec -T ugc-api
-    composer install --no-interaction --optimize-autoloader
-  args:
-    chdir: /opt/ugc
-
-- name: Install composer dependencies for ugc-admin-api
-  become: true
-  command: >
-    docker compose exec -T ugc-admin-api
-    composer install --no-interaction --optimize-autoloader
-  args:
-    chdir: /opt/ugc
-
 - name: Run migrate for ugc-api
   become: true
   command: >
     docker compose exec -T ugc-api
-    php artisan migrate --force 
+    php artisan migrate --force
   args:
     chdir: /opt/ugc
 
@@ -173,4 +149,3 @@
     php artisan larke-admin:import-route
   args:
     chdir: /opt/ugc
-

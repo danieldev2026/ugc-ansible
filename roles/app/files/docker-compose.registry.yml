@@ -23,7 +23,7 @@ services:
     volumes:
       - ./volumes/mysql:/var/lib/mysql
     environment:
-      MYSQL_ROOT_PASSWORD: ugcDEV@2026
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-ugcDEV@2026}
     networks:
       - app-network
 
@@ -35,9 +35,7 @@ services:
       - app-network
 
   ugc-ui:
-    build:
-      context: ./ugc-ui
-      dockerfile: Dockerfile
+    image: ${REGISTRY:-docker.io}/${REGISTRY_USER:-ugc}/ugc-ui:${TAG:-latest}
     container_name: ugc.ui
     restart: always
     networks:
@@ -63,9 +61,7 @@ services:
       - app-network
 
   ugc-admin:
-    build:
-      context: ./ugc-admin
-      dockerfile: Dockerfile
+    image: ${REGISTRY:-docker.io}/${REGISTRY_USER:-ugc}/ugc-admin:${TAG:-latest}
     container_name: ugc.admin
     restart: always
     networks:
