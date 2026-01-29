@@ -1,3 +1,6 @@
+# =====================
+# Base / shared
+# =====================
 - name: Ensure /opt/ugc directory exists
   file:
     path: /opt/ugc
@@ -5,6 +8,7 @@
     owner: ducle
     group: ducle
     mode: '0755'
+  tags: [base]
 
 - name: Ensure base directories
   file:
@@ -18,6 +22,7 @@
     - volumes
     - nginx
     - nginx/conf.d
+  tags: [base]
 
 - name: Copy nginx config
   copy:
@@ -26,6 +31,7 @@
     owner: ducle
     group: ducle
     mode: '0644'
+  tags: [base, nginx]
 
 - name: Copy nginx sites config
   copy:
@@ -34,6 +40,7 @@
     owner: ducle
     group: ducle
     mode: '0644'
+  tags: [base, nginx]
 
 - name: Copy docker-compose.yml
   copy:
@@ -42,6 +49,7 @@
     owner: ducle
     group: ducle
     mode: '0644'
+  tags: [base, docker]
 
 - name: Copy env files
   copy:
@@ -55,7 +63,11 @@
     - admin-api.env
     - admin.env
     - ui.env
+  tags: [base, env]
 
+# =====================
+# Clone repos
+# =====================
 - name: Clone ugc-ui
   become: false
   git:
@@ -63,6 +75,7 @@
     dest: /opt/ugc/ugc-ui
     version: develop
     force: yes
+  tags: [ugc-ui]
 
 - name: Clone ugc-api
   become: false
@@ -71,6 +84,7 @@
     dest: /opt/ugc/ugc-api
     version: develop
     force: yes
+  tags: [ugc-api]
 
 - name: Clone ugc-admin-api
   become: false
@@ -79,6 +93,7 @@
     dest: /opt/ugc/ugc-admin-api
     version: develop
     force: yes
+  tags: [ugc-admin-api]
 
 - name: Clone ugc-admin
   become: false
@@ -87,7 +102,11 @@
     dest: /opt/ugc/ugc-admin
     version: develop
     force: yes
+  tags: [ugc-admin]
 
+# =====================
+# Service env
+# =====================
 - name: Copy api env to ugc-api
   copy:
     src: env/api.env
@@ -95,6 +114,7 @@
     owner: ducle
     group: ducle
     mode: '0644'
+  tags: [ugc-api, env]
 
 - name: Copy admin api env to ugc-admin-api
   copy:
@@ -103,6 +123,7 @@
     owner: ducle
     group: ducle
     mode: '0644'
+  tags: [ugc-admin-api, env]
 
 - name: Copy admin env to ugc-admin
   copy:
@@ -111,6 +132,7 @@
     owner: ducle
     group: ducle
     mode: '0644'
+  tags: [ugc-admin, env]
 
 - name: Copy web env to ugc-ui
   copy:
@@ -119,13 +141,21 @@
     owner: ducle
     group: ducle
     mode: '0644'
+  tags: [ugc-ui, env]
 
+# =====================
+# Docker
+# =====================
 - name: Docker compose build and up
   become: true
   command: docker compose up -d --build
   args:
     chdir: /opt/ugc
+  tags: [docker]
 
+# =====================
+# Laravel permissions
+# =====================
 - name: Fix permission for ugc-api
   become: true
   command: >
@@ -133,6 +163,7 @@
     chown -R www-data:www-data storage bootstrap/cache
   args:
     chdir: /opt/ugc
+  tags: [ugc-api]
 
 - name: Fix permission for ugc-admin-api
   become: true
@@ -141,7 +172,11 @@
     chown -R www-data:www-data storage bootstrap/cache
   args:
     chdir: /opt/ugc
+  tags: [ugc-admin-api]
 
+# =====================
+# Composer
+# =====================
 - name: Install composer dependencies for ugc-api
   become: true
   command: >
@@ -149,6 +184,7 @@
     composer install --no-interaction --optimize-autoloader
   args:
     chdir: /opt/ugc
+  tags: [ugc-api]
 
 - name: Install composer dependencies for ugc-admin-api
   become: true
@@ -157,14 +193,19 @@
     composer install --no-interaction --optimize-autoloader
   args:
     chdir: /opt/ugc
+  tags: [ugc-admin-api]
 
+# =====================
+# Migrations (opt-in)
+# =====================
 - name: Run migrate for ugc-api
   become: true
   command: >
     docker compose exec -T ugc-api
-    php artisan migrate --force 
+    php artisan migrate --force
   args:
     chdir: /opt/ugc
+  tags: [ugc-api, migrate]
 
 - name: Run migrate for ugc-admin-api
   become: true
@@ -173,4 +214,4 @@
     php artisan larke-admin:import-route
   args:
     chdir: /opt/ugc
-
+  tags: [ugc-admin-api, migrate]
