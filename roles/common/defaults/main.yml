@@ -1,0 +1,12 @@
+timezone: UTC
+
+common_packages:
+  - curl
+  - git
+  - unzip
+  - ca-certificates
+  - apt-transport-https
+  - software-properties-common
+  - htop
+  - ufw
+

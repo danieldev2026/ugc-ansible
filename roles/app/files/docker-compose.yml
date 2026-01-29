@@ -1,0 +1,76 @@
+services:
+  mysql:
+    image: mysql:8
+    container_name: mysql
+    restart: always
+    volumes:
+      - ./volumes/mysql:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: ugcDEV@2026
+    networks:
+      - app-network
+
+  redis:
+    image: redis
+    container_name: redis
+    restart: always
+    networks:
+      - app-network
+
+  ugc-ui:
+    image: node:20
+    container_name: ugc.ui
+    volumes:
+      - ./ugc-ui:/app
+    ports:
+      - "8200:3000"
+    restart: always
+    working_dir: /app
+    command: npm run dev
+    networks:
+      - app-network
+
+  ugc-api:
+    image: lehongduc87/nginx-php:8.2
+    build:
+      context: ./ugc-api
+    container_name: ugc.api
+    volumes:
+      - ./ugc-api:/www
+      - ./ugc-api/config/supervisor/workers.conf:/etc/supervisor/conf.d/workers.conf
+    ports:
+      - "8201:80"
+    restart: always
+    networks:
+      - app-network
+
+  ugc-admin-api:
+    image: lehongduc87/nginx-php:8.2
+    platform: linux/amd64
+    build:
+      context: ./ugc-admin-api
+    container_name: ugc.admin-api
+    volumes:
+      - ./ugc-admin-api:/www
+    ports:
+      - "8202:80"
+    restart: always
+    networks:
+      - app-network
+
+  ugc-admin:
+    image: node:20
+    container_name: ugc.admin
+    volumes:
+      - ./ugc-admin:/app
+    ports:
+      - "8203:9527"
+    restart: always
+    working_dir: /app
+    command: npm run dev
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    name: app-network

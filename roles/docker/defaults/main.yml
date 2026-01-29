@@ -1,0 +1,9 @@
+docker_packages:
+  - ca-certificates
+  - curl
+  - gnupg
+  - lsb-release
+
+docker_users:
+  - ducle
+

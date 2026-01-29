@@ -1,0 +1,10 @@
+app_root: /opt/ugc
+
+git_branch: main
+
+git_repos:
+  ugc-ui: git@github.com:danieldev2026/ugc-ui.git
+  ugc-api: git@github.com:danieldev2026/ugc-api.git
+  ugc-admin-api: git@github.com:danieldev2026/ugc-admin-api.git
+  ugc-admin: git@github.com:danieldev2026/ugc-admin.git
+
