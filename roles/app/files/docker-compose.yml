@@ -71,6 +71,11 @@ services:
     build:
       context: ./ugc-admin
       dockerfile: Dockerfile
+      args:
+        - VUE_APP_BASE_API=${VUE_APP_BASE_API:-https://admin-api.ddev.online/admin-api}
+        - VUE_APP_PUSHER_HOST=${VUE_APP_PUSHER_HOST:-ws.ddev.online}
+        - VUE_APP_PUSHER_APP_KEY=${VUE_APP_PUSHER_APP_KEY:-wjvdnlaydeu1ogd6mov8}
+        - VUE_APP_API_BASE_URL=${VUE_APP_API_BASE_URL:-https://api.ddev.online}
     container_name: ugc.admin
     restart: always
     networks:
